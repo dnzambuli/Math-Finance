@@ -1,0 +1,253 @@
+---
+title: "Quiz 1"
+author: "Nzambuli Daniel"
+date: "2024-06-14"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 1. Define expectation and variance in the context of probability theory. Explain their significance in financial mathematics.
+
+**Expectation** is a measure of the central value or average of a random variable and provides a summary of the overall behavior of the random variable. it is expressed as
+
+$$
+E(x) = \sum (random\ variable * Its\ probability\ of\ occurence)\\
+= \int^{\infty}_{-\infty} x * f(x) dx
+$$
+
+**Variance** is a measure of how far a random variable differs from its expected value and measures the degree of dispersion of a random variable
+
+$$
+Var(x) = \sum^n_{i = 1} p_i( x_i - E(x)) ^ 2\\
+= \int^\infty_{-\infty} (x - E(x)) ^2 f(x) dx 
+$$
+
+# 2. Suppose you have historical data for three stocks:A,B,and C.
+
+| Day | Stock A Return | Stock A Return | Market Return |
+|:----|:--------------:|:--------------:|:-------------:|
+| 1   |     0.0073     |     0.0089     |    0.0058     |
+| 2   |     0.0117     |     0.0102     |    0.0150     |
+| 3   |     0.0054     |     0.0065     |    0.0120     |
+| 4   |     0.0238     |     0.0032     |    0.0141     |
+| 5   |     0.0022     |     0.0137     |    0.0078     |
+| 6   |     0.0174     |     0.0161     |    0.0193     |
+| 7   |     0.0139     |     0.0113     |    0.0087     |
+| 8   |     0.0047     |     0.0098     |    0.0134     |
+| 9   |     0.0088     |     0.0110     |    0.0046     |
+| 10  |     0.0160     |     0.0123     |    0.0061     |
+
+# Calculate the expected return and variance of a portfolio consisting of 30% of stock A, 50% of stock B,and 20% of stock C.
+
+$$
+expected\ returns = \frac{\sum^{a, b, c}_{i = a} x \in i}{n_i}\\
+E(A) = \frac{0.1112}{10}\\
+E(B) = \frac{0.103}{10}\\
+E(C) = \frac{0.1068}{10}
+$$
+
+$$
+portfolio\ return = 0.3 E(A) + 0.5 E(B) + 0.2 E(c)\\
+= 0.3 * 0.01112 + 0.5 * 0.0103 + 0.2 * 0.01068\\
+= 0.010622
+$$
+
+the expected return is $\underline{0.0106}$
+
+```{r}
+A = data.frame(a = c(0.0073, 0.0117, 0.0054, 0.0238, 0.0022, 0.0174, 0.0139, 0.0047, 0.0088, 0.0160))
+A$mean_var = A$a - mean(A$a)
+A$var = A$mean_var ^2 
+var_A = sum(A$var)
+var_A
+```
+
+```{r}
+B = data.frame(b = c(0.0089, 0.0102, 0.0065, 0.0032, 0.0137, 0.0161, 0.0113, 0.0098, 0.0110, 0.0123))
+B$mean_var = B$b - mean(B$b)
+B$var = B$mean_var ^2 
+var_B = sum(B$var)
+var_B
+C = data.frame(c = c(0.0058, 0.0150, 0.0120, 0.0141, 0.0078, 0.0193, 0.0087, 0.0134, 0.0046, 0.0061))
+C$mean_var = C$c - mean(C$c)
+C$var = C$mean_var ^2 
+var_C = sum(C$var)
+var_C
+```
+
+$$
+variance\ A = \sum^n_{i = 1}(A_i -E(A)) ^ 2\\
+= 4.05576e-05\\
+Var\ B = 1.1776e-05\\
+Var\ C = 2.07776e-05
+$$
+
+covariance
+
+```{r}
+cov_tb = data.frame(AB = 1/9 * A$mean_var * B$mean_var,
+                    AC = 1/9 * A$mean_var * C$mean_var,
+                    BC = 1/9 * B$mean_var * C$mean_var)
+cov_tb
+colSums(cov_tb)
+```
+
+$$
+cov(A, B) = \frac{1}{n-1}\sum^n_{i = 1}(A_i - E(A))(B_i-E(B))\\
+= -4.753333e-06\\
+cov(A, C) = 1.173044e-05\\
+coc(B,C) = 6.111111e-08 
+$$
+
+portfolio variance
+
+```{r}
+(0.3^2 * 0.000405576 )+ (0.5^2  * 0.00011776) + (0.2^2 * 0.000207776) + (2* 0.3 * 0.5 * -4.753333e-06) + (2 * 0.3 * 0.2 * 1.173044e-05) + (2 * 0.5 * 0.2 * 6.111111e-08)
+```
+
+$$
+portfolio\ variance = w_a^2 Var(A) + w_b^2 Var(B) + w_c^2 Var(C) + 2 w_a w_b Cov(A, B) + 2 w_a w_c Cov(A, C) + 2 w_b w_c Cov(B, C)\\
+= 7.424676e-05
+$$
+
+portfolio variance is $\underline{7.424676e-05}$
+
+# 3. Write a script in python to solve 2.
+
+```{python}
+import numpy as np
+
+def portfolio_expected_val(returns: np.ndarray, weights: np.ndarray):
+    """
+    Calculate the expected return of a portfolio given the historical returns of individual stocks and their weights.
+
+    Parameters:
+    returns (np.ndarray): A 2D numpy array where each row represents the returns of a stock over time.
+    weights (np.ndarray): A 1D numpy array representing the weights of the stocks in the portfolio.
+
+    Returns:
+    numeric type: Expected return of the portfolio.
+    """
+    # expected returns for each stock
+    expected_returns = np.mean(returns, axis=1)
+    
+    # expected return portfolio
+    expected_return_portfolio = np.dot(weights, expected_returns)
+    
+    
+    
+    return expected_return_portfolio
+```
+
+```{python}
+returns = np.array([
+    [0.0073, 0.0117, 0.0054, 0.0238, 0.0022, 0.0174, 0.0139, 0.0047, 0.0088, 0.0160],  # Stock A
+    [0.0089, 0.0102, 0.0065, 0.0032, 0.0137, 0.0161, 0.0113, 0.0098, 0.0110, 0.0123],  # Stock B
+    [0.0058, 0.0150, 0.0120, 0.0141, 0.0078, 0.0193, 0.0087, 0.0134, 0.0046, 0.0061]   # Stock C
+])
+
+weights = np.array([0.3, 0.5, 0.2])
+
+expected_return_portfolio = portfolio_expected_val(returns, weights)
+print(f"Expected Return of the Portfolio: {expected_return_portfolio}")
+
+
+```
+
+```{python}
+def portfolio_var(returns: np.ndarray, weights: np.ndarray):
+    """
+    Calculate the expected return of a portfolio given the historical returns of individual stocks and their weights.
+
+    Parameters:
+    returns (np.ndarray): A 2D numpy array where each row represents the returns of a stock over time.
+    weights (np.ndarray): A 1D numpy array representing the weights of the stocks in the portfolio.
+
+    Returns:
+    numeric type: Expected return of the portfolio.
+    """
+    cov_matrix = np.cov(returns)
+    
+    # Calculate the variance of the portfolio
+    portfolio_variance = np.dot(weights.T, np.dot(cov_matrix, weights))
+    
+    
+    return portfolio_variance
+```
+
+```{python}
+portfolio_variance = portfolio_var(returns, weights)
+print(f"Variance of the Portfolio: {portfolio_variance}")
+```
+
+# 4. Give the definition of a martingale and explain its role in modeling the evolution of stock prices.
+
+**Martingale** assuming all prior information of a random variable in continuous time sequence, the best prediction of the next future random variable in the sequence is the current random variable
+
+given a sequence of random variables with $\{X_t\}$ the current variable at time **t** and a sequence $\{F_t\}$ representing prior information up to a time **t.** $\{X_t\}$ is a martingale if
+
+$$
+E(X_{t+1} | F_t) = X_t
+$$
+
+# 5. Let $X_t \sim N(\mu, \sigma^2)$ represent stockprices. Give the statement of Ito’s lemma. Hence use Ito’s Lemma to find the differential $df(X_t)$ if $X_t$follows the stochastic differential equation(SDE):
+
+$$
+d(X_t) = \mu X_t dt  + \sigma X_t dW_t
+$$
+
+# where $f(X_t)  = \ln {X_t}$. Furthermore, compute the mean and variance of the resulting probability distribution for $f(X_t)$
+
+ito's lemma
+
+$$
+df(X_t, t) = (\frac{\partial f}{\partial t} + \mu\frac{\partial f}{\partial X_t} + \frac{1}{2}\sigma^2\frac{\partial ^2f}{\partial X_t^2} )dt + \sigma(\frac{\partial f}{\partial X_t})dW_t
+$$
+
+SDE
+
+$$
+d(X_t) = \mu X_t dt  + \sigma X_t dW_t
+$$
+
+function
+
+$$
+f(X_t)  = \ln {X_t}
+$$
+
+derivatives
+
+$$
+\frac{\partial f}{\partial t} = 0\\
+\frac{\partial f}{\partial X_t} = \frac{1}{X_t}\\
+\frac{\partial ^2 f}{\partial X_t^2} = -\frac{1}{X_t^2}
+$$
+
+fit to Ito's lemma
+
+$$
+(\mu\frac{1}{X_t} + \frac{1}{2}\sigma^2-\frac{1}{X_t^2})dt + \sigma X_t \frac{1}{X_t}dW_t\\
+$$
+
+# 6. Prove that a Brownian motion is a martingale
+
+1.  Given prior information of a series of random varibles the expected value of the next future random variable is the current random variable
+
+for Brownian motion
+
+$$
+w_0 = 0
+$$
+
+and a future event $W_t$ is predicted by the current event as it is independent of all past events in the Brownian motion. This is because Brownian motion increases from time 0 in a continuous path
+
+$$
+E(W_t | prior_s)\\
+E(W_t) = E(W_{current}) + E( W_t - W_{current}) \\
+E(W_t) = E(W_{current}) + 0\\
+\therefore E(W_t | prior_s) = E(W_{current})
+$$
